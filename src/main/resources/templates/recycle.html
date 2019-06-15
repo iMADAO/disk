@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>-->
+    <!--<link type="text/css" rel="stylesheet" href="../static/bootstrap-3.3.7-dist/css/bootstrap.css"></link>-->
+    <!--<script type="text/javascript" src="../static/bootstrap-3.3.7-dist/js/bootstrap.js"></script>-->
+
+    <script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="/jquery.form.js"></script>
+    <link type="text/css" rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.css"></link>
+    <script type="text/javascript" src="/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+
+    <script type="text/javascript">
+        $(function(){
+            $(".delete").click(function(){
+                var flag = confirm("是否彻底删除该文件?")
+                if(!flag)
+                    return;
+                var recycleId = $(this).attr("recycleId");
+                var parentNode = $(this).parent().parent()
+                $.ajax({
+                    url: '/recycle/' + recycleId,
+                    type: 'delete',
+                    success: function(data){
+                        if(data.code==0){
+                            $(parentNode).remove()
+                            alert("删除成功")
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+            $(".recover").click(function () {
+                var flag = confirm("是否恢复该文件?")
+                if(!flag)
+                    return;
+                var recycleId = $(this).attr("recycleId");
+                var parentNode = $(this).parent().parent()
+                $.ajax({
+                    url: '/recycle/recover',
+                    type: 'post',
+                    data: {
+                        'recycleId': recycleId
+                    },
+                    success: function(data){
+                        if(data.code==0){
+                            $(parentNode).remove()
+                            alert("恢复成功")
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+            $("#logoutNode").click(function(){
+                $.ajax({
+                    url: '/user/logout',
+                    type: 'get',
+                    success: function(data){
+                        if(data.code==0){
+                            alert("退出登录成功")
+                            $("#userNav").empty();
+                            $("#userNav").append('<li ><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>\n' +
+                                '<li ><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>');
+                        }else{
+                            alert("请稍后重试")
+                        }
+                        return false;
+                    },
+                    error: function(){
+                        alert("请稍后重试")
+                        return false;
+                    }
+                })
+                return false;
+            })
+
+            $("#deleteBtn").click(function(){
+                var checkBoxArray = $('input[type=checkbox]:checked')
+                if(checkBoxArray.length==0)
+                    return;
+                var array = new Array()
+                var dataStr = ""
+                $.each(checkBoxArray, function(index, obj){
+                    array.push($(obj).attr("recycleId"))
+                    dataStr+=$(obj).attr("recycleId") + ";"
+                })
+                var length = array.length
+                var flag = confirm("是否彻底删除选中的" + length + "个文件?")
+                if(!flag)
+                    return;
+                $.ajax({
+                    url: '/recycle/list',
+                    type: 'delete',
+                    data: {
+                        'recycleIdList': dataStr,
+                    },
+                    success: function(data){
+                        if(data.code==0){
+                            alert("已删除")
+                            //移除页面节点
+                            $.each(checkBoxArray, function(index, obj){
+                                $(obj).parent().parent().remove()
+                            })
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+            $("#recoverBtn").click(function(){
+                var checkBoxArray = $('input[type=checkbox]:checked')
+                if(checkBoxArray.length==0)
+                    return;
+                var array = new Array()
+                var dataStr = ""
+                $.each(checkBoxArray, function(index, obj){
+                    array.push($(obj).attr("recycleId"))
+                    dataStr+=$(obj).attr("recycleId") + ";"
+                })
+                var length = array.length
+                var flag = confirm("是否恢复选中的" + length + "个文件?")
+                if(!flag)
+                    return;
+                $.ajax({
+                    url: '/recycle/recover/list',
+                    type: 'post',
+                    data: {
+                        'recycleIdList': dataStr,
+                    },
+                    success: function(data){
+                        if(data.code==0){
+                            alert("已恢复")
+                            //移除页面节点
+                            $.each(checkBoxArray, function(index, obj){
+                                $(obj).parent().parent().remove()
+                            })
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+        })
+    </script>
+</head>
+<body>
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-9" style="border-left: 1px solid #d5d5d5; border-right: 1px solid darkgray">
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#" style="text-align: center; color: #2e6da4; font-weight:bold;">网盘</a>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown"><a href="/toIndex" target="_blank">网盘首页</a></li>
+                        <li><a href="/toRecycle" target="_blank" style="color: #2e6da4">回收站</a></li>
+                        <li><a href="/toShare" target="_blank">我的分享</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav navbar-right" id="userNav">
+                        <li th:if="${session.user!=null}" id="userCenter">
+                            <div>
+                                <div class="dropdown">
+                                                <span class="dropdown-toggle" id="menu1" data-toggle="dropdown" >
+                                                     <!--<img width="45px" th:src="@{${session.user.userPic}}" src="../static/img/da8e974dc_xs.jpg" class="img-thumbnail"/>-->
+                                                    <img width="45px" th:src="@{${session.user.userPic}}" class="img-thumbnail"/>
+                                                </span>
+                                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="/toHomePage" target="_blank">个人中心</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="logoutNode">退出登录</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li th:if="${session.user==null}" id="register"><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>
+                        <li th:if="${session.user==null}" id="login"><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <span class="btn btn-default" id="deleteBtn">删除</span>
+        <span class="btn btn-default" id="recoverBtn">恢复</span>
+        <div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th></th>
+                    <th>大小</th>
+                    <th>创建时间</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="recycle:${recycleList}" class="fileNode">
+                    <td class="fileInfoNode">
+                        <input type="checkbox" th:if=${recycle.recycleId!=null} th:recycleId="${recycle.recycleId}">
+                        <img th:if="${recycle.fileType==0}" src="/img/file.jpg">
+                        <img th:if="${recycle.fileType==1}" src="/img/dir.jpg">
+                        <span>
+                             <a th:if="${recycle.fileType==0}" th:text="${recycle.fileName}">文件夹1</a>
+                            <a th:if="${recycle.fileType==1}" th:text="${recycle.fileName}" th:href="@{'/toRecycle?location='+${location} + '/' + ${recycle.fileName}}">文件夹1</a>
+                        </span>
+                    </td>
+                    <td class="extraAction">
+                        <a th:if="${recycle.recycleId!=null}" class="delete" th:recycleId="${recycle.recycleId}">删除</a>
+                        <a th:if="${recycle.recycleId!=null}" class="recover" th:recycleId="${recycle.recycleId}">恢复</a>
+                    </td>
+                    <td th:if="${recycle.fileType==0}" th:text="${recycle.fileSize}">1.5G</td>
+                    <td th:if="${recycle.fileType==1}"></td>
+                    <td th:text="${recycle.OriginCreateTime}">2019-01-01</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-sm-2">
+    </div>
+</div>
+</body>
+</html>

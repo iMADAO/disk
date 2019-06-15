@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="/jquery.form.js"></script>
+    <link type="text/css" rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.css"></link>
+    <script type="text/javascript" src="/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+    <script type="text/javascript">
+        $(function(){
+            $("#logoutNode").click(function(){
+                $.ajax({
+                    url: '/user/logout',
+                    type: 'get',
+                    success: function(data){
+                        if(data.code==0){
+                            alert("退出登录成功")
+                            $("#userNav").empty();
+                            $("#userNav").append('<li ><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>\n' +
+                                '<li ><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>');
+                        }else{
+                            alert("请稍后重试")
+                        }
+                        return false;
+                    },
+                    error: function(){
+                        alert("请稍后重试")
+                        return false;
+                    }
+                })
+                return false;
+            })
+
+        })
+    </script>
+</head>
+<body>
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-9" style="border-left: 1px solid #d5d5d5; border-right: 1px solid darkgray">
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#" style="text-align: center; color: #2e6da4; font-weight:bold;">网盘</a>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown"><a href="/toIndex" target="_blank">网盘首页</a></li>
+                        <li><a href="/toRecycle" target="_blank">回收站</a></li>
+                        <li><a href="/toShare" target="_blank" style="color: #2e6da4">我的分享</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav navbar-right" id="userNav">
+                        <li th:if="${session.user!=null}" id="userCenter">
+                            <div>
+                                <div class="dropdown">
+                                        <span class="dropdown-toggle" id="menu1" data-toggle="dropdown" >
+                                             <img width="45px" th:src="@{${session.user.userPic}}" class="img-thumbnail"/>
+                                        </span>
+                                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="/toHomePage" target="_blank">个人中心</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="logoutNode">退出登录</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li th:if="${session.user==null}" id="register"><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>
+                        <li th:if="${session.user==null}" id="login"><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div>文件详情</div>
+        <table  class="table">
+            <tr>
+                <td>分享者</td>
+                <td th:text="${shareDTO.userName}"></td>
+            </tr>
+            <tr>
+                <td>文件名</td>
+                <td th:text="${shareDTO.fileName}"></td>
+            </tr>
+            <tr>
+                <td>文件大小</td>
+                <td th:text="${shareDTO.fileSize}"></td>
+            </tr>
+            <tr>
+                <td>分享时间</td>
+                <td th:text="${shareDTO.shareTime}"></td>
+            </tr>
+            <tr>
+                <td><a th:href="'/download/share/' + ${shareDTO.shareId}">下载</a></td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

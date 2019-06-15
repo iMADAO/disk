@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <!--<script type="text/javascript" th:src="@{~/static/jquery-1.12.4.min.js}"></script>-->
+    <!--<script type="text/javascript" th:src="@{~/static/jquery.form.js}"></script>-->
+    <!--<link type="text/css" rel="stylesheet" th:href="@{~/static/bootstrap-3.3.7-dist/css/bootstrap.css}"></link>-->
+    <!--<script type="text/javascript" th:src="@{~/static/bootstrap-3.3.7-dist/js/bootstrap.js}"></script>-->
+
+    <script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="/jquery.form.js"></script>
+    <link type="text/css" rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.css"></link>
+    <script type="text/javascript" src="/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+    <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>-->
+    <!--<script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o" crossorigin="anonymous"></script>-->
+    <!--<link href="https://getbootstrap.com/docs/4.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">-->
+
+    <script type="text/javascript">
+        $(function(){
+            $(".fileNode").hover(function(){
+                var fileName = $(this).attr("fileName")
+                var location = $("#location").text()
+                var downloadLink = 'download?location=' + location + '&fileName=' + fileName
+                $(this).find(".extraAction").append('<a class="download" href="'+ downloadLink+'">下载</a>\n' +
+                    '<a class="toTrash">删除</a> <a class="share">分享</a>')
+                $(".toTrash").click(function(){
+                    var flag = confirm("是否放入回收站?")
+                    if(!flag)
+                        return;
+                    var fileName = $(this).parent().parent().attr("fileName")
+                    var location = $("#location").text()
+                    var thisNode = $(this)
+                    $.ajax({
+                        url: '/toTrash',
+                        type: 'post',
+                        data: {
+                            'fileName': fileName,
+                            'location': location
+                        },
+                        success: function(data){
+                            if(data.code==0){
+                                alert("已放入回收站")
+                                // console.log($(thisNode).parent().parent().innerHTML)
+                                // // $(thisNode).parent().parent().remove()
+                                var condition = "[fileName='"+ fileName+"']"
+                                console.log(condition)
+                                $(condition).remove()
+                            }else{
+                                if(data.hint)
+                                    alert(data.hint)
+                            }
+
+                        }
+
+                    })
+                })
+
+                $(".share").click(function(){
+                    var flag = confirm("是否分享该文件?")
+                    if(!flag)
+                        return;
+                    var fileName = $(this).parent().parent().attr("fileName")
+                    var location = $("#location").text()
+                    var thisNode = $(this)
+                    $.ajax({
+                        url: '/share/add',
+                        type: 'post',
+                        data: {
+                            'fileName': fileName,
+                            'location': location
+                        },
+                        success: function(data){
+                            if(data.code==0){
+                                $("#shareBody").text("分享成功,链接为: " + data.data)
+                                $("#shareBtn").click()
+                            }else{
+                                if(data.hint)
+                                    alert(data.hint)
+                            }
+
+                        }
+
+                    })
+                })
+
+            }, function(){
+                $(this).find(".extraAction").empty()
+            })
+
+            $("#uploadDir").ajaxForm(function(data){
+                console.log(data)
+                if(data.code==0){
+                    alert("上传成功")
+                    window.location.reload()
+                }else{
+                    if(data.hint)
+                        alert(data.hint)
+                }
+
+            });
+
+            $("#uploadFile").ajaxForm(function(data){
+                console.log(data)
+                if(data.code==0){
+                    alert("上传成功")
+                    window.location.reload()
+                }else{
+                    if(data.hint)
+                        alert(data.hint)
+                }
+
+            });
+
+            $("#submitCreateDirectory").click(function(){
+                var directoryName = $.trim($("#newDirectoryName").val())
+                var location = $("#location").text()
+                $("#newDirectoryName").val(directoryName)
+                $.ajax({
+                    url: '/createDirectory',
+                    type: 'post',
+                    data: {
+                        'directoryName': directoryName,
+                        'location': location
+                    },
+                    success: function(data){
+                        console.log(data)
+                        if(data.code==0){
+                            alert("创建成功")
+                            window.location.reload()
+                            // var file = data.data
+                            // var img = '<img src="/img/dir.jpg">'
+                            // $("#fileNodeList").prepend(' <tr class="fileNode">\n' +
+                            //     '                        <td class="fileInfoNode">\n' +
+                            //     '                            <input type="checkbox">\n' +
+                            //      img +
+                            //     '                            <span><a>'+file.fileName+'</a></span>\n' +
+                            //     '                        </td>\n' +
+                            //     '                        <td class="extraAction">\n' +
+                            //     '                        </td>\n' +
+                            //     '                        <td></td>\n' +
+                            //     '                        <td">'+file.updateTime+'</td>\n' +
+                            //     '                    </tr>')
+                            // $("#closeCreateDirectory").click()
+                            // $($("#fileNodeList").firstChild).hover(function(){
+                            //     $(this).find(".extraAction").append('<a>下载</a>\n' +
+                            //         '<a>删除</a> <a class="share" data-toggle="modal" data-target="#shareModal">分享</a>')
+                            //
+                            // }, function(){
+                            //     $(this).find(".extraAction").empty()
+                            //     console.log("bbb")
+                            // })
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+            var filePath = $("#filePath")
+            var location = $("#location").text()
+            var locationArr = location.split("/")
+            // alert(location)
+            // alert(locationArr)
+            var aNode = "<a class='btn btn-default' href='/toIndex'>/</a>";
+            var path = "/"
+            $.each(locationArr, function(index, obj){
+                if(index!=0 && obj!="")
+                {
+                    path += obj + "/"
+                    if(index==locationArr.length-1) {
+                        aNode += '<a class="btn btn-primary" href="/toIndex?location=' + path + '">' + obj + '</a>'
+                    }else{
+                        aNode += '<a class="btn btn-default" href="/toIndex?location=' + path + '">' + obj + '</a>'
+                    }
+                }
+            })
+            filePath.empty()
+            filePath.append(aNode)
+
+
+            $("#logoutNode").click(function(){
+                $.ajax({
+                    url: '/user/logout',
+                    type: 'get',
+                    success: function(data){
+                        if(data.code==0){
+                            alert("退出登录成功")
+                            $("#userNav").empty();
+                            $("#userNav").append('<li ><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>\n' +
+                                '<li ><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>');
+                        }else{
+                            alert("请稍后重试")
+                        }
+                        return false;
+                    },
+                    error: function(){
+                        alert("请稍后重试")
+                        return false;
+                    }
+                })
+                return false;
+            })
+
+            $("#downloadBtn").click(function(){
+                $(this).attr("href", "#")
+                var checkBoxArray = $('input[type=checkbox]:checked')
+                if(checkBoxArray.length==0)
+                    return;
+                if(checkBoxArray.length>1){
+                    alert("只能同时下载一个文件")
+                    return
+                }
+                var array = new Array()
+                $.each(checkBoxArray, function(index, obj){
+                    array.push($(obj).attr("fileName"))
+                })
+                var location = $("#location").text()
+                var url =  '/download?location=' + location + "&fileName=" + array
+                console.log(url)
+                $(this).attr("href", url)
+            })
+
+            $("#deleteBtn").click(function () {
+                var checkBoxArray = $('input[type=checkbox]:checked')
+                if(checkBoxArray.length==0)
+                    return;
+                var array = new Array()
+                var dataStr = ""
+                $.each(checkBoxArray, function(index, obj){
+                    array.push($(obj).attr("fileName"))
+                    dataStr+=$(obj).attr("fileName") + ";"
+                })
+                var length = array.length
+                var flag = confirm("是否将选中的" + length + "个文件放入回收站?")
+                if(!flag)
+                    return;
+                var location = $("#location").text()
+                $.ajax({
+                    url: '/toTrash/list',
+                    type: 'post',
+                    data: {
+                        'fileNameList': dataStr,
+                        'location': location
+                    },
+                    success: function(data){
+                        if(data.code==0){
+                            alert("已放入回收站")
+                        //移除页面节点
+                            $.each(checkBoxArray, function(index, obj){
+                                $(obj).parent().parent().remove()
+                            })
+                        }else{
+                            if(data.hint)
+                                alert(data.hint)
+                        }
+                    }
+                })
+            })
+
+
+        })
+    </script>
+</head>
+<body>
+<div class="row">
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-9" style="border-left: 1px solid #d5d5d5; border-right: 1px solid darkgray">
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#" style="text-align: center; color: #2e6da4; font-weight:bold;">网盘</a>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown"><a href="/toIndex" target="_blank" style="color: #2e6da4">网盘首页</a></li>
+                        <li><a href="/toRecycle" target="_blank">回收站</a></li>
+                        <li><a href="/toShare" target="_blank">我的分享</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <ul class="nav navbar-nav navbar-right" id="userNav">
+                        <li th:if="${session.user!=null}" id="userCenter">
+                            <div>
+                                <div class="dropdown">
+                                        <span class="dropdown-toggle" id="menu1" data-toggle="dropdown" >
+                                             <img width="45px" th:src="@{${session.user.userPic}}" class="img-thumbnail"/>
+
+                                        </span>
+                                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="/toHomePage" target="_blank">个人中心</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" id="logoutNode">退出登录</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li th:if="${session.user==null}" id="register"><a href="/toRegister" target="_blank"><span class="glyphicon glyphicon-user"></span> 注册</a></li>
+                        <li th:if="${session.user==null}" id="login"><a href="/toLogin" target="_blank"><span class="glyphicon glyphicon-log-in"></span> 登录</a></li>
+                    </ul>
+                </div>
+            </div>
+
+        </nav>
+        <div>
+            <span class="dropdown">
+                <button type="button" class="btn dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown">上传
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                    <li role="presentation">
+                        <a role="menuitem" tabindex="-1" href="#" data-toggle="modal" data-target="#uploadFileModal">上传文件</a>
+                    </li>
+                    <li role="presentation">
+                        <a role="menuitem" tabindex="-1" href="#" data-toggle="modal" data-target="#uploadDirectoryModal">上传文件夹</a>
+                    </li>
+
+                </ul>
+            </span>
+            <span class="btn btn-default" data-toggle="modal" data-target="#createFolderModal">新建文件夹</span>
+            <a class="btn btn-default" id="downloadBtn" href="#">下载</a>
+            <span class="btn btn-default" id="deleteBtn">删除</span>
+        </div>
+
+        <div class="modal fade" id="uploadFileModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="uploadFileLabel">上传文件</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="uploadDir" method="post" id="uploadFile" enctype="multipart/form-data">
+                            <input type="file" class="form-control" name="multipartFiles">
+                            <button class="btn btn-primary">提交</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+
+        <div class="modal fade" id="uploadDirectoryModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">上传文件夹</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/uploadDir" id="uploadDir" method="post" enctype="multipart/form-data">
+                            <input type="hidden" value="/" name="location"/>
+                            <input type="file" class="form-control" webkitdirectory name="multipartFiles">
+                            <button class="btn btn-primary">提交</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="closeUploadDir">关闭</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+
+        <div class="modal fade" id="createFolderModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="createFolderLabel">新建文件夹</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" placeholder="请输入文件夹名" class="form-control" id="newDirectoryName"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="closeCreateDirectory">关闭</button>
+                        <button type="button" class="btn btn-primary" id="submitCreateDirectory">提交</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+
+        <button data-toggle="modal" data-target="#shareModal" style="visibility: hidden" id="shareBtn">分享</button>
+        <div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="shareModalLabel">分享文件</h4>
+                    </div>
+                    <div class="modal-body" id="shareBody">
+                        分享成功,链接如下
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+
+        <br/>
+        <div id="filePath">
+        </div>
+        <span id="location" style="visibility: hidden;" th:text="${location}"></span>
+        <div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th></th>
+                    <th>大小</th>
+                    <th>创建时间</th>
+                </tr>
+                </thead>
+                <tbody id="fileNodeList">
+                    <tr th:each="file:${fileList}" class="fileNode" th:fileName="${file.fileName}">
+                        <td class="fileInfoNode">
+                            <input type="checkbox" th:fileName="${file.fileName}">
+                            <img th:if="${file.fileType==0}" src="/img/file.jpg">
+                            <img th:if="${file.fileType==1}" src="/img/dir.jpg">
+                            <span>
+                                <a th:if="${file.fileType==0}" th:text="${file.fileName}">文件夹1</a>
+                                <a th:if="${file.fileType==1}" th:text="${file.fileName}" th:href="@{'/toIndex?location=' + ${location} + '/' + ${file.fileName}}">文件夹1</a>
+                            </span>
+                        </td>
+                        <td class="extraAction">
+                        </td>
+                        <td th:if="${file.fileType==0}" th:text="${file.fileSize}">1.5G</td>
+                        <td th:if="${file.fileType==1}"></td>
+                        <td th:text="${file.updateTime}">2019-01-01</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    <div class="col-sm-2">
+    </div>
+</div>
+</body>
+
+</html>
+

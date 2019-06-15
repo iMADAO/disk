@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:if="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <title>login</title>
+        <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>-->
+        <!--<script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o" crossorigin="anonymous"></script>-->
+        <!--<link href="https://getbootstrap.com/docs/4.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">-->
+
+        <script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+        <script type="text/javascript" src="/jquery.form.js"></script>
+        <link type="text/css" rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.css"></link>
+        <script type="text/javascript" src="/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+        <script>
+            $(function(){
+                $("#account").blur(function(){
+                    checkAccount($("#account"));
+                })
+
+
+
+                $("#password").blur(function () {
+                    checkPassword($("#password"))
+                })
+
+                $("#submit").click(function(){
+                    var accountFlag = checkAccount($("#account"));
+                    var passwordFlag = checkPassword($("#password"));
+                    if(!(accountFlag&&passwordFlag)){
+                        return false;
+                    }
+                    $.ajax({
+                        url: '/user/login',
+                        type: 'post',
+                        data:{
+                            userName: $("#account").val(),
+                            password: $("#password").val()
+                        },
+                        datatype: 'json',
+                        success: function(data){
+                            console.log(data)
+                            if(data.code==0){
+                                alert("登录成功");
+                                // var lastPage = $("#lastPage").text()
+                                // if(lastPage){
+                                //     location.href = lastPage
+                                // } else {
+                                //     location.href = "/index";
+                                // }
+                                location.href = "/index"
+                            }else{
+                                if(data.hint)
+                                    alert(data.hint)
+
+                            }
+                        }
+                    })
+                    return false;
+                })
+
+                function checkAccount(account) {
+
+                    var value = account.val().trim();
+                    account.val(value);
+                    if(value==""){
+                        account.parent().next().text("帐号不能为空")
+                        return false;
+                    }
+                    // if(!isEmail(value)){
+                    //     account.parent().next().text("帐号格式不正确")
+                    //     return false;
+                    // }
+                    account.parent().next().text("");
+                    return true;
+                }
+
+                function checkPassword(password){
+                    var value = password.val().trim();
+                    password.val(value);
+                    if(value==""){
+                        password.parent().next().text("密码不能为空");
+                        return false;
+                    }
+                    password.parent().next().text("");
+                    return true;
+                }
+
+                //检验邮箱格式
+                function isEmail(email){
+                    var pattern = /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/;
+                    return pattern.test(email);
+                }
+            })
+
+        </script>
+    </head>
+    <body>
+    <div class="container">
+        <div class="row" >
+            <div class="col-sm-4">
+            </div>
+            <div class="col-sm-4" >
+                <br/><br/><br/><br/>
+                <div align="center">
+                    <div>
+                        <h3 style="text-align: center; color: #2e6da4; font-weight:bold;">登录</h3>
+                    </div>
+                    <br/>
+                    <span id="lastPage" th:if="${lastPage!=null}" th:text="${lastPage}" style="visibility: hidden"></span>
+                    <form action="" method="post">
+                        <table>
+                            <tr>
+                                <td><input name="account" class="form-control" type="text" id="account" placeholder="请输入帐号名"></td>
+                                <td style="color: red"></td>
+                            </tr>
+                            <tr>
+                                <td><input name="password" class="form-control" type="password" placeholder="请输入密码" id="password"></td>
+                                <td style="color: red"></td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp</td>
+                                <!--<td><a href="#" id="retrievePassword" data-toggle="modal" data-target="#passwordModal">忘记密码?</a></td>-->
+                                <td></td>
+                                <div class="modal fade" id="passwordModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                <h4 class="modal-title" id="myModalLabel">修改密码</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div>
+                                                    <span class="btn btn-default" type="phone">电话帐号</span>
+                                                    <span class="btn btn-default" type="email">邮箱帐号</span>
+                                                    <div id="changePasswordContent"></div>
+                                                </div>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal" id="closePassModal">关闭</button>
+                                                <button type="button" class="btn btn-primary" id="submitChangePwd">提交更改</button>
+                                            </div>
+                                        </div><!-- /.modal-content -->
+                                    </div><!-- /.modal -->
+                                </div>
+
+                            </tr>
+                            <tr>
+                                <td ><input type="submit" value="提交" id="submit" class="btn btn-primary" style="width: 100%"></td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #F6F6F6; text-align: center">没有帐号?<a href="/toRegister">注册?</a></td>
+                            </tr>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+
+</html>

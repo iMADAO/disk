@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width,
+                                     initial-scale=1.0,
+                                     maximum-scale=1.0,
+                                     user-scalable=no">
+    <title>Title</title>
+    <!--<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>-->
+    <!--<script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o" crossorigin="anonymous"></script>-->
+    <!--<link href="https://getbootstrap.com/docs/4.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">-->
+
+    <script type="text/javascript" src="/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="/jquery.form.js"></script>
+    <link type="text/css" rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.css"></link>
+    <script type="text/javascript" src="/bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+
+    <style type="text/css">
+        body{
+            background-color: #F7F8FA
+        }
+    </style>
+    <script type="text/javascript">
+        $(function(){
+            $("#account").blur(function(){
+                checkAccount();
+            })
+
+            $.check=function(node, mess){
+                if(node.val().trim().length==0)
+                {
+                    node.parent().next().text(mess + "不能为空");
+                    return false
+                }
+                return true
+            }
+
+            $("#password").blur(function(){
+                checkPassword();
+            })
+
+            // $(":input[type!=button]").focus(function(){
+            //     $(this).parent().next().text("")
+            // })
+            $("#password2").blur(function(){
+                checkPassword2();
+            })
+
+            $("#userName").blur(function(){
+                checkUserName()
+            })
+
+            //点击提交按钮，提交表单，进行注册
+            $("#submit").click(function(){
+                var accountFlag = checkAccount();
+                var passwordFlag = checkPassword();
+                var password2Flag = checkPassword2();
+                var userNameFlag = checkUserName();
+                var codeFlag = true;
+                if($("#type").val()=="phone"){
+                    codeFlag = checkValidateCode();
+                }
+                if(accountFlag && passwordFlag && password2Flag && codeFlag && userNameFlag){
+                    if($("#type").val()=="email") {
+                        $.ajax({
+                            url: "/user/register",
+                            type: 'post',
+                            data:{
+                                email: $("#account").val(),
+                                password: $("#password").val(),
+                                userName: $("#userName").val()
+                            },
+                            datatype: 'json',
+                            success: function(data){
+                                console.log(data)
+                                if(data.code==0){
+                                    alert("注册成功");
+                                    location.href="toLogin";
+                                }else{
+                                    if(data.hint)
+                                        alert(data.hint)
+
+                                }
+                            }
+                        })
+                    }
+                    else if($("#type").val()=="phone") {
+                        $.ajax({
+                            url: "/user/register/phone",
+                            type: 'post',
+                            data:{
+                                phone: $("#account").val(),
+                                password: $("#password").val(),
+                                code: $("#validateCode").val()
+                            },
+                            datatype: 'json',
+                            success: function(data){
+                                console.log(data)
+                                if(data.code!=0){
+                                    alert(data.hint)
+                                }else{
+                                    alert("注册成功");
+                                    location.href="toLogin";
+                                }
+                            }
+                        })
+                    }
+
+                }
+                return false;
+            })
+
+            function checkPassword2(){
+                var passwd = $("#password").val().trim();
+                var passwd2 = $("#password2").val().trim();
+                if(passwd2.length==0){
+                    $("#password2").parent().next().text("密码不能为空")
+                    return false;
+                } else if(passwd!=passwd2){
+                    $("#password2").parent().next().text("前后密码不一致")
+                    return false;
+                }
+                $("#password2").parent().next().text("")
+                return true;
+            }
+            function checkPassword(){
+                if($("#password").val().trim().length==0){
+                    $("#password").parent().next().text("密码不能为空")
+                    return false;
+                }else{
+                    $("#password").parent().next().text("")
+                }
+                return true;
+            }
+
+            function checkUserName(){
+                if($("#userName").val().trim().length==0){
+                    $("#userName").parent().next().text("用户名不能为空")
+                    return false;
+                }else{
+                    $("#userName").parent().next().text("")
+                }
+                return true;
+            }
+
+            function checkAccount(){
+                var account = $("#account").val().trim();
+                $("#account").val(account);
+
+                if(account==""){
+                    $("#account").parent().next().text("邮箱不能为空")
+                    return false;
+                }
+
+                if(!isEmail($("#account").val())){
+                    $("#account").parent().next().text("邮箱格式不正确")
+                    return false;
+                }
+                $("#account").parent().next().text("")
+                return true;
+            }
+
+            //检验邮箱格式
+            function isEmail(email){
+                var pattern = /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/;
+                return pattern.test(email);
+            }
+
+        })
+    </script>
+
+</head>
+<body style="background-color: #F7F8FA">
+<div class="row">
+    <div class="col-sm-4">
+    </div>
+    <div class="col-sm-4">
+        <div>
+            <br/><br/><br/>
+            <h3 class="text-center" align="center" style="color: #2e6da4; font-weight:bold;">注册</h3>
+        </div>
+        <div align="center">
+            <br/>
+            <br/>
+        </div>
+        <div align="center">
+            <form action="/user/register/email" method="post">
+                <table>
+
+                    <!--<tr>-->
+                        <!--<td id="byMail" class="btn btn-default" style="width: 100%">邮箱</td>-->
+                        <!--<td id="byPhone" class="btn btn-default" class="btn btn-default">电话</td>-->
+                    <!--</tr>-->
+                    <tr>
+                        <td id="accountName">邮箱</td>
+                        <td><input name="account" class="form-control" type="text" id="account" placeholder="请输入邮箱"></td>
+                        <td ></td>
+                    </tr>
+                    <tr>
+                        <td>用户名</td>
+                        <td><input name="userName" class="form-control" type="text" id="userName" placeholder="请输入用户名"></td>
+                        <td ></td>
+                    </tr>
+                    <tr>
+                        <td>密码:</td>
+                        <td><input id="password" class="form-control" name="password" type="password" placeholder="请输入密码"></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>确认密码:</td>
+                        <td><input id="password2" class="form-control" name="password2" type="password" placeholder="请输入再次密码"></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"><input id="submit" type="submit" class="btn btn-primary" value="提交"></td>
+                    </tr>
+                    <tr>
+
+                        <td colspan="2" style="text-align: center; background-color: #F6F6F6">已有帐号?<a href="/toLogin">登录</a></td>
+                    </tr>
+                </table>
+                <input type="hidden" value="email" id="type"/>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
